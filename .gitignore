@@ -4,6 +4,7 @@ node_modules
 .nitro
 .cache
 dist
+dist/
 data/*.sqlite
 data/*.sqlite-journal
 data/*.sqlite-wal
@@ -17,4 +18,3 @@ public/uploads/images/*
 .dev.vars
 .wrangler/
 .DS_Store
-
