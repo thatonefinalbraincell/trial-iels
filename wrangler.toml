@@ -1,0 +1,33 @@
+name = "ielts-platform"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".output/public"
+
+# ---------------------------------------------------------------------------
+# D1 binding — SQL database
+# ---------------------------------------------------------------------------
+# Accessed in server handlers as: event.context.cloudflare.env.ielts_db
+# Push schema:  npm run db:schema
+# Reseed:       npm run db:seed
+# Remote shell: npx wrangler d1 execute ielts-db --remote --command "SELECT 1"
+[[d1_databases]]
+binding = "ielts_db"
+database_name = "ielts-db"
+database_id = "bad9b3b6-a5c5-4dd6-9307-54bcfe093c29"
+
+# ---------------------------------------------------------------------------
+# R2 binding — object storage for audio + images
+# ---------------------------------------------------------------------------
+# Accessed in server handlers as: event.context.cloudflare.env.UPLOADS
+# Files served from: https://pub-14064a4af44e450d8aa584606b77ceb4.r2.dev/<key>
+[[r2_buckets]]
+binding = "UPLOADS"
+bucket_name = "test-bucket"
+
+# ---------------------------------------------------------------------------
+# Runtime variables — safe to commit, non-secret.
+# ---------------------------------------------------------------------------
+[vars]
+R2_PUBLIC_URL = "https://pub-14064a4af44e450d8aa584606b77ceb4.r2.dev"
+# Override secrets with:  npx wrangler pages secret put JWT_SECRET
+# For local dev, values come from .dev.vars (gitignored).
