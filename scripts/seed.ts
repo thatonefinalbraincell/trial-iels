@@ -11,6 +11,8 @@ import Database from 'better-sqlite3'
 import { readFileSync, existsSync, mkdirSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import bcrypt from 'bcryptjs'
+import { cambridge17ListeningTest1 } from './data/cambridge17ListeningTest1.ts'
+import { cambridgeStyleReadingTest2 } from './data/cambridgeStyleReadingTest2.ts'
 
 const dbPath = resolve(process.cwd(), process.env.DB_PATH || './data/ielts.sqlite')
 if (!existsSync(dirname(dbPath))) mkdirSync(dirname(dbPath), { recursive: true })
@@ -22,7 +24,7 @@ db.exec(readFileSync(resolve(process.cwd(), 'server/db/schema.sql'), 'utf8'))
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-const insTest = db.prepare('INSERT INTO tests (title, skill, description, duration_min) VALUES (?,?,?,?)')
+const insTest = db.prepare('INSERT INTO tests (title, skill, description, duration_min, published) VALUES (?,?,?,?,?)')
 const insSection = db.prepare(
   `INSERT INTO sections (test_id, order_index, title, instructions, body, audio_path, image_path, extra_json)
    VALUES (?,?,?,?,?,?,?,?)`
@@ -32,8 +34,8 @@ const insQuestion = db.prepare(
    VALUES (?,?,?,?,?,?,?,?)`
 )
 
-function createTest(title: string, skill: string, desc: string, mins: number) {
-  return insTest.run(title, skill, desc, mins).lastInsertRowid as number
+function createTest(title: string, skill: string, desc: string, mins: number, published = true) {
+  return insTest.run(title, skill, desc, mins, published ? 1 : 0).lastInsertRowid as number
 }
 function createSection(testId: number, order: number, title: string, instructions: string, body: string, audio?: string, image?: string, extra?: any) {
   return insSection.run(testId, order, title, instructions, body, audio ?? null, image ?? null, extra ? JSON.stringify(extra) : null).lastInsertRowid as number
@@ -42,8 +44,74 @@ function createQ(sectionId: number, order: number, num: number | null, type: str
   return insQuestion.run(sectionId, order, num, type, prompt, data ? JSON.stringify(data) : null, answer !== undefined ? JSON.stringify(answer) : null, points)
 }
 
-// Clear existing seeded tests (only the default Cambridge-style ones)
-db.prepare(`DELETE FROM tests WHERE title LIKE 'Cambridge-style%'`).run()
+function seedListeningSet(source: typeof cambridge17ListeningTest1) {
+  const testId = createTest(source.title, source.skill, source.description, source.duration_min)
+  source.sections.forEach((section, sectionIndex) => {
+    const sectionId = createSection(
+      testId,
+      sectionIndex,
+      section.title,
+      section.instructions,
+      section.body,
+      section.audio_path,
+      undefined,
+      {
+        ...(section.extra ?? {}),
+        source_pdf: source.extra.source_pdf,
+        source_question_page: source.extra.source_question_page,
+        modes: source.extra.modes,
+        test_mode_audio: source.extra.test_mode_audio,
+        practice_mode_audio: source.extra.practice_mode_audio
+      }
+    )
+    section.questions.forEach((question, questionIndex) => {
+      createQ(
+        sectionId,
+        questionIndex,
+        question.number,
+        question.type,
+        question.prompt,
+        question.data ?? null,
+        question.answer,
+        question.points ?? 1
+      )
+    })
+  })
+}
+
+function seedStructuredTest(source: any) {
+  const testId = createTest(source.title, source.skill, source.description, source.duration_min, source.published ?? true)
+  source.sections.forEach((section: any, sectionIndex: number) => {
+    const sectionId = createSection(
+      testId,
+      sectionIndex,
+      section.title,
+      section.instructions,
+      section.body,
+      section.audio_path,
+      section.image_path,
+      section.extra
+    )
+    section.questions.forEach((question: any, questionIndex: number) => {
+      createQ(
+        sectionId,
+        questionIndex,
+        question.number,
+        question.type,
+        question.prompt,
+        question.data ?? null,
+        question.answer,
+        question.points ?? 1
+      )
+    })
+  })
+}
+
+// Clear existing seeded tests.
+db.prepare(`DELETE FROM tests WHERE title LIKE 'Cambridge-style%' OR title = ?`).run(cambridge17ListeningTest1.title)
+
+// Licensed Cambridge IELTS 17 content supplied by the trainer/user.
+seedListeningSet(cambridge17ListeningTest1)
 
 // ---------------------------------------------------------------------------
 // 1) READING TEST (3 passages, 40 questions)
@@ -70,31 +138,27 @@ const p1 = createSection(readingId, 0,
   'You should spend about 20 minutes on Questions 1–13, which are based on Reading Passage 1 below.',
   p1Body)
 
-// Q 1-6: Matching headings
-const headings = [
-  { id: 'i',    text: 'A surprising set of priorities among growers' },
-  { id: 'ii',   text: 'Historical precedents and modern drivers' },
-  { id: 'iii',  text: 'Criticism regarding land use and displacement' },
-  { id: 'iv',   text: 'The limits of economic valuation' },
-  { id: 'v',    text: 'The environmental impact of urban plots' },
-  { id: 'vi',   text: 'Rapid growth across European capitals' },
-  { id: 'vii',  text: 'High-tech vs. low-tech innovation' },
-  { id: 'viii', text: 'A history of government-funded schemes' },
-  { id: 'ix',   text: 'Nutrition and public health outcomes' }
+// Q 1-7: Note completion
+const p1Notes = [
+  { prompt: 'The number of registered community gardens had more than ____ between 2005 and 2017.', ans: 'tripled' },
+  { prompt: 'Municipal planners now include edible landscaping in new ____.', ans: 'developments' },
+  { prompt: 'Many younger residents lack access to private ____ space.', ans: 'outdoor' },
+  { prompt: 'Mature ____ can increase the carbon absorbed by community plots.', ans: ['fruit trees', 'trees'] },
+  { prompt: 'Returning sealed soil to cultivation improves ____.', ans: 'drainage' },
+  { prompt: 'Urban agriculture could meet 15 per cent of fresh ____ demand in mid-sized cities.', ans: 'vegetable' },
+  { prompt: 'Affordable innovations include shared tool ____.', ans: 'libraries' }
 ]
-const headingAnswers = ['ii','vi','v','iv','iii','vii','i']
-for (let i = 0; i < 7; i++) {
-  createQ(p1, i, i+1, 'reading_matching_headings',
-    `Paragraph ${String.fromCharCode(65 + i)}`,
-    { headings },
-    { answer: headingAnswers[i] })
-}
+p1Notes.forEach((q, i) =>
+  createQ(p1, i, i + 1, 'reading_note_completion', q.prompt, { word_limit: 2 }, { answer: q.ans }))
 
-// Q 8-10: True/False/Not Given
+// Q 8-13: True/False/Not Given
 const tfng = [
-  { prompt: 'Community gardens in most European capitals have declined in number since 2005.', ans: 'FALSE' },
-  { prompt: 'The Rockefeller Foundation report claims urban agriculture can fully replace rural vegetable farming.', ans: 'FALSE' },
-  { prompt: 'Dr Markova\'s SROI figures vary depending on how volunteer labour is valued.', ans: 'TRUE' }
+  { prompt: 'Urban vegetable gardens were once unusual in industrialised cities.', ans: 'TRUE' },
+  { prompt: 'Victory gardens were mainly funded by private food companies.', ans: 'NOT GIVEN' },
+  { prompt: 'The number of registered community gardens doubled between 2005 and 2017.', ans: 'FALSE' },
+  { prompt: 'Most urban gardens operate as commercial businesses.', ans: 'FALSE' },
+  { prompt: 'High-tech urban farming installations may consume significant electricity.', ans: 'TRUE' },
+  { prompt: 'In the Utrecht survey, growing food was the top motivation for plot-holders.', ans: 'FALSE' }
 ]
 tfng.forEach((t, i) => createQ(p1, 7+i, 8+i, 'reading_tfng', t.prompt, null, { answer: t.ans }))
 
@@ -104,7 +168,7 @@ const summary = [
   { prompt: 'Simpler innovations may be more impactful because they are ____ and widely adopted.', ans: 'affordable' },
   { prompt: 'In the Utrecht survey, "growing my own food" only ranked ____.', ans: 'fourth' }
 ]
-summary.forEach((s, i) =>
+summary.slice(0, 0).forEach((s, i) =>
   createQ(p1, 10+i, 11+i, 'reading_summary_completion', s.prompt, { word_limit: 2 }, { answer: s.ans }))
 
 // ---------- PASSAGE 2: "The surprising intelligence of octopuses" ----------
@@ -123,19 +187,28 @@ const p2 = createSection(readingId, 1,
   'You should spend about 20 minutes on Questions 14–26, which are based on Reading Passage 2 below.',
   p2Body)
 
-// Q 14-18: Matching information (which paragraph contains the following info?)
+// Q 14-17: Matching information (which paragraph contains the following info?)
 const matchingInfo = [
   { prompt: 'a description of how octopus neurons are distributed across the body', ans: 'B' },
   { prompt: 'a reference to a commercial development that has provoked controversy', ans: 'G' },
   { prompt: 'an alternative hypothesis for why octopus intelligence evolved', ans: 'D' },
-  { prompt: 'an example of an octopus apparently engaging in play', ans: 'F' },
-  { prompt: 'an anecdote about an octopus distinguishing between individuals', ans: 'A' }
+  { prompt: 'an example of an octopus apparently engaging in play', ans: 'F' }
 ]
 const paraOptions = ['A','B','C','D','E','F','G'].map(l => ({ id: l, text: `Paragraph ${l}` }))
 matchingInfo.forEach((m, i) =>
   createQ(p2, i, 14+i, 'reading_matching_information', m.prompt, { options: paraOptions }, { answer: m.ans }))
 
 // Q 19-22: Matching features (researchers ↔ findings)
+const p2Sent = [
+  { prompt: 'Cephalopods and vertebrates diverged over ____ million years ago.', ans: '500' },
+  { prompt: 'Only around ____ of an octopus\'s neurons are in the central brain.', ans: ['one-third', 'one third'] },
+  { prompt: 'The veined octopus uses discarded ____ shells as a portable shelter.', ans: 'coconut' },
+  { prompt: 'The UK changed its ____ Welfare Act to include cephalopods as sentient.', ans: 'Animal' },
+  { prompt: 'Octopuses typically die shortly after their first ____.', ans: 'reproduction' }
+]
+p2Sent.forEach((s, i) =>
+  createQ(p2, 4+i, 18+i, 'reading_sentence_completion', s.prompt, { word_limit: 1 }, { answer: s.ans }))
+
 const researchers = [
   { id: 'A', text: 'Binyamin Hochner' },
   { id: 'B', text: 'Jennifer Mather' },
@@ -149,7 +222,7 @@ const features = [
   { prompt: 'documented evidence of octopuses engaging in object play', ans: 'C' }
 ]
 features.forEach((f, i) =>
-  createQ(p2, 5+i, 19+i, 'reading_matching_features', f.prompt, { options: researchers }, { answer: f.ans }))
+  createQ(p2, 9+i, 23+i, 'reading_matching_features', f.prompt, { options: researchers }, { answer: f.ans }))
 
 // Q 23-26: Sentence completion (one word)
 const sent = [
@@ -158,7 +231,7 @@ const sent = [
   { prompt: 'The UK changed its ____ Welfare Act to include cephalopods as sentient.', ans: 'Animal' },
   { prompt: 'Octopuses typically die shortly after their first ____.', ans: 'reproduction' }
 ]
-sent.forEach((s, i) =>
+sent.slice(0, 0).forEach((s, i) =>
   createQ(p2, 9+i, 23+i, 'reading_sentence_completion', s.prompt, { word_limit: 1 }, { answer: s.ans }))
 
 // ---------- PASSAGE 3: "Why we remember what we forget" -------------------
@@ -178,6 +251,44 @@ const p3 = createSection(readingId, 2,
   'You should spend about 20 minutes on Questions 27–40, which are based on Reading Passage 3 below.',
   p3Body)
 
+const p3ParaOptions = ['A','B','C','D','E','F','G','H'].map(l => ({ id: l, text: `Paragraph ${l}` }))
+const p3MatchingInfo = [
+  { prompt: 'a contrast between older models and real-life forgetting', ans: 'B' },
+  { prompt: 'evidence from brain scans of suppressed memories', ans: 'C' },
+  { prompt: 'a therapeutic approach connected with traumatic memories', ans: 'D' },
+  { prompt: 'a description of how sleep prunes less useful connections', ans: 'E' },
+  { prompt: 'a warning about drugs designed to prevent forgetting', ans: 'F' }
+]
+p3MatchingInfo.forEach((m, i) =>
+  createQ(p3, i, 27+i, 'reading_matching_information', m.prompt, { options: p3ParaOptions }, { answer: m.ans }))
+
+const p3People = [
+  { id: 'A', text: 'Dr Priya Rajavelu' },
+  { id: 'B', text: 'University of Wisconsin researchers' },
+  { id: 'C', text: 'Marcus Arneson' },
+  { id: 'D', text: 'Nineteenth-century psychologists' },
+  { id: 'E', text: 'Neuroscientists' }
+]
+const p3FeatureQuestions = [
+  { prompt: 'treated forgetting mainly as decay or failure', ans: 'D' },
+  { prompt: 'described the brain as doing cognitive housekeeping', ans: 'A' },
+  { prompt: 'used the term synaptic homeostasis for overnight resetting', ans: 'B' },
+  { prompt: 'argued that remembering everything would make life poorer', ans: 'C' },
+  { prompt: 'warn that interfering with forgetting may damage decision-making', ans: 'E' }
+]
+p3FeatureQuestions.forEach((f, i) =>
+  createQ(p3, 5+i, 32+i, 'reading_matching_features', f.prompt, { options: p3People }, { answer: f.ans }))
+
+const p3SummaryBank = ['active', 'passive', 'selective', 'decay', 'coherence', 'regulation']
+const p3Summary = [
+  { prompt: 'Recent research treats forgetting as an ____ process.', ans: 'active' },
+  { prompt: 'Modern studies show that forgetting can be highly ____.', ans: 'selective' },
+  { prompt: 'Arneson links forgetting to the narrative ____ of the self.', ans: 'coherence' },
+  { prompt: 'The difference between healthy pruning and pathological loss lies mainly in its ____.', ans: 'regulation' }
+]
+p3Summary.forEach((s, i) =>
+  createQ(p3, 10+i, 37+i, 'reading_summary_completion', s.prompt, { word_limit: 1, word_bank: p3SummaryBank }, { answer: s.ans }))
+
 // Q 27-30: Multiple choice (single)
 const mcq = [
   { prompt: 'Which view of forgetting does the passage argue against?', opts:['Forgetting is an adaptive, selective process.','Forgetting happens uniformly over time.','Forgetting is essential for learning.','Forgetting is strongly affected by sleep.'], ans:'B' },
@@ -185,7 +296,7 @@ const mcq = [
   { prompt: 'Memory reconsolidation therapies aim to:', opts:['permanently erase traumatic memories.','restore memories people with PTSD have lost.','weaken vivid intrusive memories.','improve memory for positive events.'], ans:'C' },
   { prompt: 'According to the Wisconsin researchers, synaptic homeostasis:', opts:['causes new synapses to form during the day.','selectively shrinks irrelevant synapses during sleep.','strengthens every memory overnight.','is only observed in mice, not humans.'], ans:'B' }
 ]
-mcq.forEach((m, i) =>
+mcq.slice(0, 0).forEach((m, i) =>
   createQ(p3, i, 27+i, 'reading_mcq_single', m.prompt, { options: m.opts }, { answer: m.ans }))
 
 // Q 31-33: Yes/No/Not Given (views of the writer / Arneson)
@@ -194,11 +305,11 @@ const ynng = [
   { prompt: 'The science of forgetting is now more established than it was twenty years ago.', ans: 'YES' },
   { prompt: 'Arneson\'s book has sold more copies than similar books on memory.', ans: 'NOT GIVEN' }
 ]
-ynng.forEach((y, i) =>
+ynng.slice(0, 0).forEach((y, i) =>
   createQ(p3, 4+i, 31+i, 'reading_ynng', y.prompt, null, { answer: y.ans }))
 
 // Q 34-36: MCQ multi
-createQ(p3, 7, 34, 'reading_mcq_multi',
+false && createQ(p3, 7, 34, 'reading_mcq_multi',
   'Which TWO of the following does the passage suggest about nootropic drugs?',
   { options: [
     'They are uniformly safe if used by healthy adults.',
@@ -219,11 +330,13 @@ const sc = [
   { prompt: 'Drugs that target the brain\'s forgetting machinery may disrupt ____.', ans: 'encoding' },
   { prompt: 'The mechanisms of pathological loss and healthy pruning differ mainly in their ____.', ans: ['regulation'] }
 ]
-sc.forEach((s, i) =>
+sc.slice(0, 0).forEach((s, i) =>
   createQ(p3, 8+i, 35+i, 'reading_summary_completion',
     s.prompt,
     { word_limit: 2, word_bank: bank },
     { answer: s.ans }))
+
+seedStructuredTest(cambridgeStyleReadingTest2)
 
 // ---------------------------------------------------------------------------
 // 2) LISTENING TEST (4 parts, 40 questions)
@@ -232,7 +345,8 @@ const listeningId = createTest(
   'Cambridge-style IELTS Academic Listening — Mock Test 1',
   'listening',
   'Four listening parts modelled on Cambridge IELTS 20 Test 4. 40 questions. ~30 minutes of audio + 10 min transfer.',
-  40
+  40,
+  false
 )
 
 // --- Part 1: Form completion (accommodation enquiry)

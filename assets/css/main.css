@@ -482,6 +482,107 @@ code {
   padding: 6px 10px; border: 1px solid var(--border-strong); border-radius: 6px;
   font-size: 14px; background: #fff;
 }
+.select-answer {
+  margin: 10px 0 0 40px;
+}
+.answer-select {
+  min-width: 220px;
+  max-width: 100%;
+  padding: 7px 10px;
+  border: 1px solid #8c8c8c;
+  border-radius: 3px;
+  background: #fff;
+  color: #111;
+  font: 15px/1.3 Arial, Helvetica, sans-serif;
+}
+.choice-bank-question {
+  margin: 10px 0 0 40px;
+}
+.drop-zone {
+  min-width: 150px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 2px dashed #6b7280;
+  border-radius: 3px;
+  background: #fff;
+  color: #111827;
+  font: 600 14px/1.2 Arial, Helvetica, sans-serif;
+  cursor: copy;
+}
+.drop-zone.filled {
+  border-style: solid;
+  border-color: #111827;
+  background: #f3f4f6;
+}
+.choice-bank {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.choice-chip {
+  border: 1px solid #9ca3af;
+  border-radius: 4px;
+  background: #f9fafb;
+  color: #111827;
+  padding: 6px 10px;
+  min-height: 34px;
+  font: 14px/1.25 Arial, Helvetica, sans-serif;
+  cursor: grab;
+}
+.choice-chip:hover,
+.choice-chip.selected {
+  background: #e5f3f8;
+  border-color: #0f7c9f;
+}
+.choice-chip:active {
+  cursor: grabbing;
+}
+.choice-bank-hint {
+  display: block;
+  margin-top: 6px;
+  color: #6b7280;
+  font-size: 12px;
+}
+.linked-question-note {
+  margin: 10px 0 0 40px;
+  color: #4b5563;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.ielts-sheet {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #111827;
+  background: #fff;
+}
+.ielts-sheet h2 {
+  margin: 0 0 16px;
+  font-size: 22px;
+  letter-spacing: 3px;
+  font-weight: 700;
+}
+.ielts-sheet h2 span {
+  margin-left: 22px;
+  letter-spacing: 0;
+  font-style: italic;
+}
+.ielts-sheet h3 {
+  margin: 18px 0 12px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+}
+.ielts-sheet p {
+  margin: 8px 0;
+}
+.ielts-sheet ul {
+  margin: 8px 0 0 18px;
+  padding: 0;
+}
+.ielts-sheet li {
+  margin-bottom: 7px;
+}
 
 /* Bottom navigator */
 .ielts-bottombar {
@@ -513,6 +614,657 @@ code {
 .nav-btn.answered { background: var(--ielts-navy); color: #fff; border-color: var(--ielts-navy); }
 .nav-btn.flagged { border-color: var(--ielts-orange); border-width: 2px; }
 .nav-btn.current { outline: 2px solid var(--ielts-orange); outline-offset: 2px; }
+
+/* =========================================================================
+   Inspera-style IELTS reading shell
+   ========================================================================= */
+.reading-exam-shell {
+  --exam-font-scale: 1;
+  min-height: 100vh;
+  background: #fff;
+  color: #111;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: calc(16px * var(--exam-font-scale));
+  line-height: 1.5;
+  padding: 55px 0 76px;
+}
+.reading-exam-shell h1,
+.reading-exam-shell h2,
+.reading-exam-shell h3 {
+  font-family: Arial, Helvetica, sans-serif;
+  letter-spacing: 0;
+  color: #111;
+}
+.reading-topbar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 35;
+  height: 55px;
+  background: #fff;
+  border-top: 2px solid #e21a2c;
+  border-bottom: 1px solid #d5d5d5;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 14px;
+}
+.reading-logo {
+  color: #e31837;
+  font-size: 36px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -2px;
+}
+.reading-candidate {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 15px;
+}
+.reading-candidate span {
+  font-size: 12px;
+  font-weight: 400;
+}
+.reading-status {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+}
+.reading-timer {
+  min-width: 92px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 2px;
+  background: #f8fafc;
+  color: #111;
+  padding: 6px 10px;
+  font: 700 14px/1 Arial, Helvetica, sans-serif;
+}
+.reading-timer.low {
+  background: #e9113a;
+  border-color: #e9113a;
+  color: #fff;
+}
+.reading-split {
+  display: grid;
+  grid-template-columns: minmax(420px, 1fr) minmax(420px, 1fr);
+  min-height: calc(100vh - 131px);
+}
+.reading-panel {
+  overflow-y: auto;
+  height: calc(100vh - 131px);
+  padding: 26px 30px 120px;
+}
+.reading-passage {
+  border-right: 1px solid #d8d8d8;
+  background: #fff;
+}
+.reading-passage h2,
+.reading-questions h2 {
+  margin: 0 0 10px;
+  font-size: calc(22px * var(--exam-font-scale));
+}
+.reading-instructions {
+  margin: 0 0 18px;
+  color: #555;
+  font-size: calc(14px * var(--exam-font-scale));
+}
+.reading-passage p {
+  margin: 0 0 14px;
+  text-align: justify;
+  font-size: calc(16px * var(--exam-font-scale));
+}
+.reading-questions {
+  background: #fafafa;
+}
+.reading-questions .qsection-title {
+  border-radius: 2px;
+  border-color: #cfcfcf;
+  border-left: 0;
+  background: #fff;
+  box-shadow: none;
+  font-size: calc(15px * var(--exam-font-scale));
+}
+.reading-questions .question .q-prompt,
+.reading-questions .question .options,
+.reading-questions .select-answer,
+.reading-questions .choice-bank-question {
+  font-size: calc(16px * var(--exam-font-scale));
+}
+.reading-questions .question input[type=text],
+.reading-questions .answer-select {
+  font-size: calc(15px * var(--exam-font-scale));
+}
+.reading-option-list {
+  background: #fff;
+  border-color: #d0d0d0;
+  color: #111;
+}
+.reading-option-list ol {
+  margin: 8px 0 0 20px;
+}
+.reading-bottombar {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 34;
+  min-height: 70px;
+  background: #fff;
+  border-top: 1px solid #d8d8d8;
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  gap: 10px;
+  overflow-x: auto;
+}
+.reading-footer-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  padding-right: 8px;
+  white-space: nowrap;
+}
+.reading-exam-shell.high-contrast {
+  filter: contrast(1.2);
+}
+.reading-exam-shell.text-size-small {
+  --exam-font-scale: 0.92;
+}
+.reading-exam-shell.text-size-medium {
+  --exam-font-scale: 1;
+}
+.reading-exam-shell.text-size-large {
+  --exam-font-scale: 1.16;
+}
+
+/* =========================================================================
+   Inspera-style IELTS listening shell
+   ========================================================================= */
+.inspera-shell {
+  --exam-font-scale: 1;
+  min-height: 100vh;
+  background: #fff;
+  color: #111;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: calc(16px * var(--exam-font-scale));
+  line-height: 1.45;
+  padding: 55px 0 76px;
+}
+.inspera-shell h1,
+.inspera-shell h2,
+.inspera-shell h3 {
+  font-family: Arial, Helvetica, sans-serif;
+  letter-spacing: 0;
+  color: #111;
+}
+.inspera-topbar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 35;
+  height: 55px;
+  background: #fff;
+  border-top: 2px solid #e21a2c;
+  border-bottom: 1px solid #d5d5d5;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 18px;
+}
+.inspera-logo {
+  color: #e31837;
+  font-size: 36px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -2px;
+}
+.inspera-candidate {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 15px;
+}
+.inspera-candidate span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 400;
+}
+.inspera-status {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+}
+.inspera-icon-btn {
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: #111;
+  cursor: pointer;
+}
+.practice-strip {
+  position: sticky;
+  top: 55px;
+  z-index: 20;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: #eaf7fb;
+  border-bottom: 1px solid #b8dce7;
+  padding: 8px 20px;
+  font-size: 14px;
+}
+.practice-strip a {
+  margin-left: auto;
+  color: #006d8f;
+  font-weight: 700;
+}
+.inspera-main {
+  display: grid;
+  grid-template-columns: minmax(230px, 28vw) 1fr;
+  min-height: calc(100vh - 131px);
+}
+.inspera-part-panel {
+  border-right: 1px solid #d8d8d8;
+  padding: 26px 24px;
+  background: #fafafa;
+}
+.inspera-part-panel h2 {
+  font-size: calc(21px * var(--exam-font-scale));
+  margin: 0 0 8px;
+}
+.part-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 14px 0;
+  font-size: 13px;
+}
+.part-meta span {
+  border: 1px solid #d4d4d4;
+  border-radius: 2px;
+  background: #fff;
+  padding: 4px 8px;
+}
+.practice-audio audio {
+  width: 100%;
+}
+.test-audio-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #d6d6d6;
+  background: #fff;
+  font-size: 13px;
+}
+.part-image {
+  max-width: 100%;
+  margin-top: 12px;
+  border: 1px solid #d6d6d6;
+}
+.inspera-question-surface {
+  padding: 28px 28px 130px;
+  max-width: 980px;
+}
+.question-paper-head h3 {
+  margin: 0 0 8px;
+  font-size: calc(20px * var(--exam-font-scale));
+}
+.question-paper-head p {
+  margin: 0 0 18px;
+}
+.question-sheet {
+  border: 1px solid #222;
+  padding: 18px 24px;
+  margin-bottom: 18px;
+  font-size: calc(16px * var(--exam-font-scale));
+}
+.question-sheet h3,
+.question-sheet .sheet-title {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+}
+.question-sheet ul {
+  margin: 8px 0 14px 24px;
+}
+.note-box {
+  border: 1px solid #222;
+  padding: 16px 28px 20px;
+  margin-top: 18px;
+}
+.sheet-gap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 132px;
+  min-height: 20px;
+  border-bottom: 1px dotted #444;
+  margin: 0 4px;
+  padding-left: 2px;
+  vertical-align: baseline;
+}
+.sheet-gap--short {
+  min-width: 70px;
+}
+.gap-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 18px;
+  margin-right: 6px;
+  border: 1px solid #777;
+  background: #fff;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 700;
+}
+.inspera-bottombar {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 34;
+  min-height: 70px;
+  background: #fff;
+  border-top: 1px solid #d8d8d8;
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+}
+.floating-arrows {
+  position: fixed;
+  right: 30px;
+  bottom: 110px;
+  display: inline-flex;
+  gap: 3px;
+}
+.floating-arrows button {
+  width: 56px;
+  height: 56px;
+  border: 0;
+  background: #111;
+  color: #fff;
+  cursor: pointer;
+}
+.floating-arrows button:disabled {
+  background: #e2e2e2;
+  color: #fff;
+  cursor: not-allowed;
+}
+.inspera-question-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0 20px;
+}
+.part-tab {
+  font-weight: 700;
+  margin-right: 4px;
+}
+.inspera-qnav-btn {
+  width: 27px;
+  height: 32px;
+  border: 1px solid transparent;
+  background: #fff;
+  color: #111;
+  font-size: 16px;
+  cursor: pointer;
+}
+.inspera-qnav-btn.active {
+  border-color: #1b85a6;
+  box-shadow: inset 0 0 0 1px #1b85a6;
+}
+.inspera-qnav-btn.attempted span {
+  border-bottom: 3px solid #111;
+}
+.review-btn {
+  margin-left: auto;
+  align-self: stretch;
+  min-width: 76px;
+  border: 0;
+  background: #efefef;
+  color: #555;
+  cursor: pointer;
+}
+.audio-start-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: rgba(0, 0, 0, 0.64);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-align: center;
+}
+.audio-start-dialog {
+  width: min(880px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.audio-start-dialog p {
+  max-width: 980px;
+  margin: 0;
+  font-size: 16px;
+}
+.audio-play-btn,
+.submit-next-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: #000;
+  color: #fff;
+  padding: 12px 20px;
+  min-height: 46px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.options-page {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: #fff;
+  color: #111;
+}
+.options-page header {
+  height: 74px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.options-page header button {
+  position: absolute;
+  right: 22px;
+}
+.options-page h1 {
+  font-size: 28px;
+  margin: 0;
+}
+.options-page main {
+  width: min(700px, calc(100vw - 32px));
+  margin: 0 auto;
+}
+.option-row {
+  width: 100%;
+  min-height: 76px;
+  border: 1px solid #cfcfcf;
+  background: #fff;
+  color: #111;
+  display: grid;
+  grid-template-columns: 46px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 0 26px;
+  font-size: 18px;
+  text-align: left;
+  cursor: pointer;
+}
+.option-row.primary {
+  background: #e9113a;
+  color: #fff;
+  border-color: #e9113a;
+  margin-bottom: 18px;
+}
+.option-row--stacked {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 14px;
+  padding: 16px 26px;
+  cursor: default;
+}
+.option-row__label {
+  display: grid;
+  grid-template-columns: 46px 1fr auto;
+  align-items: center;
+  gap: 14px;
+}
+.text-size-control {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-left: 60px;
+}
+.text-size-choice {
+  min-height: 52px;
+  border: 1px solid #b9b9b9;
+  background: #fff;
+  color: #111;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  cursor: pointer;
+}
+.text-size-choice strong {
+  font-size: 18px;
+}
+.text-size-choice.active {
+  border-color: #111;
+  background: #e8f4f7;
+  box-shadow: inset 0 -3px 0 #111;
+}
+.inspera-shell .question .q-prompt,
+.inspera-shell .question .options,
+.inspera-shell .choice-bank-question,
+.inspera-shell .linked-question-note {
+  font-size: calc(16px * var(--exam-font-scale));
+}
+.inspera-shell .question input[type=text],
+.inspera-shell .question select {
+  font-size: calc(15px * var(--exam-font-scale));
+}
+.inspera-shell .question input[type=text] {
+  min-width: calc(160px * var(--exam-font-scale));
+}
+.inspera-submit-page {
+  min-height: calc(100vh - 131px);
+  padding: 28px 18vw;
+}
+.submit-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 126px;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 42px;
+}
+.toc-parts {
+  display: grid;
+  gap: 10px;
+  max-width: 620px;
+}
+.toc-part {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid #d6d6d6;
+  background: #fff;
+  padding: 14px 16px;
+  cursor: pointer;
+  text-align: left;
+}
+.inspera-shell.high-contrast {
+  filter: contrast(1.2);
+}
+.inspera-shell.text-size-small {
+  --exam-font-scale: 0.92;
+}
+.inspera-shell.text-size-medium {
+  --exam-font-scale: 1;
+}
+.inspera-shell.text-size-large {
+  --exam-font-scale: 1.16;
+}
+@media (max-width: 820px) {
+  .reading-split {
+    grid-template-columns: 1fr;
+  }
+  .reading-panel {
+    height: auto;
+    min-height: 50vh;
+  }
+  .reading-passage {
+    border-right: 0;
+    border-bottom: 1px solid #d8d8d8;
+  }
+  .reading-logo {
+    font-size: 28px;
+  }
+  .reading-status {
+    gap: 4px;
+  }
+  .reading-candidate span {
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .reading-footer-actions {
+    margin-left: 0;
+  }
+  .inspera-main {
+    grid-template-columns: 1fr;
+  }
+  .inspera-part-panel {
+    border-right: 0;
+    border-bottom: 1px solid #d8d8d8;
+  }
+  .inspera-status {
+    gap: 4px;
+  }
+  .inspera-logo {
+    font-size: 28px;
+  }
+  .floating-arrows {
+    right: 12px;
+    bottom: 86px;
+  }
+  .inspera-submit-page {
+    padding: 24px;
+  }
+  .text-size-control {
+    margin-left: 0;
+  }
+  .option-row__label {
+    grid-template-columns: 30px 1fr auto;
+  }
+}
 
 /* =========================================================================
    Writing / Speaking specific
@@ -973,6 +1725,14 @@ code {
 .test-card .meta { color: var(--muted); font-size: 13px; display: flex; gap: 14px; flex-wrap: wrap; }
 .test-card .arrow { color: var(--primary-600); }
 .test-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.test-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
 
 /* Empty state */
 .empty {

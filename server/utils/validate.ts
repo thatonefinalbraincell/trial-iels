@@ -21,6 +21,10 @@ export interface ValidationResult { correct: boolean | null; expected: any }
  * @param response  - user's response (already parsed JSON/value)
  */
 export function validate(type: string, answerJson: any, response: any): ValidationResult {
+  if (answerJson?.ignore === true) {
+    return { correct: null, expected: null }
+  }
+
   // Writing/speaking are not auto-scored
   if (type.startsWith('writing_') || type.startsWith('speaking_')) {
     return { correct: null, expected: null }

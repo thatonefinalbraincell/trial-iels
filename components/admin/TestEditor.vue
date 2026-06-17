@@ -310,6 +310,10 @@
               <template v-else-if="editQ.type?.includes('matching')">
                 <label>Options (one per line, format: <code>A=Option text</code>)</label>
                 <textarea v-model="optionsText" rows="6" placeholder="A=Scientist X&#10;B=Scientist Y&#10;..."></textarea>
+                <label class="check-row">
+                  <input type="checkbox" v-model="dragDropInteraction" />
+                  Use Inspera-style drag/drop answer cards
+                </label>
                 <label>Correct option letter</label>
                 <input v-model="answerText" />
               </template>
@@ -335,6 +339,8 @@
                     <input v-model="answerText" placeholder="elephant|elephants" />
                   </div>
                 </div>
+                <label>Word bank / draggable choices (optional, one per line)</label>
+                <textarea v-model="wordBankText" rows="4" placeholder="puzzle&#10;logic&#10;confusion"></textarea>
               </template>
 
               <template v-else-if="editQ.type?.startsWith('writing_')">
@@ -392,6 +398,8 @@ const currentSection = ref<any>(null)
 const optionsText = ref('')
 const headingsText = ref('')
 const answerText = ref('')
+const wordBankText = ref('')
+const dragDropInteraction = ref(false)
 const chooseCount = ref(2)
 const wordLimit = ref(2)
 const minWordsQ = ref(150)
@@ -448,9 +456,13 @@ const typesForSkill = computed(() => {
         { value:'reading_mcq_multi', label:'Multiple Choice (multi)' },
         { value:'reading_summary_completion', label:'Summary Completion' },
         { value:'reading_sentence_completion', label:'Sentence Completion' },
+        { value:'reading_note_completion', label:'Note Completion' },
+        { value:'reading_table_completion', label:'Table Completion' },
+        { value:'reading_flowchart_completion', label:'Flow-chart Completion' },
         { value:'reading_short_answer', label:'Short Answer' },
         { value:'reading_matching_information', label:'Matching Information' },
         { value:'reading_matching_features', label:'Matching Features' },
+        { value:'reading_matching_sentence_endings', label:'Matching Sentence Endings' },
         { value:'reading_diagram_labelling', label:'Diagram Labelling' },
       ]}
     ],
@@ -603,7 +615,8 @@ function addQuestion(section: any) {
     order_index: section.questions?.length || 0,
     points: 1, prompt: '', data: {}, answer: null
   }
-  optionsText.value = ''; headingsText.value = ''; answerText.value = ''
+  optionsText.value = ''; headingsText.value = ''; answerText.value = ''; wordBankText.value = ''
+  dragDropInteraction.value = false
   chooseCount.value = 2; wordLimit.value = 2; minWordsQ.value = 150; cueCardQ.value = ''
 }
 
@@ -621,9 +634,11 @@ function editQuestion(q: any, section: any) {
     answerText.value = q.answer?.answer ?? q.answer ?? ''
   } else if (t.includes('matching')) {
     optionsText.value = (q.data?.options || []).map((o:any) => `${o.id}=${o.text}`).join('\n')
+    dragDropInteraction.value = q.data?.interaction === 'drag_drop'
     answerText.value = q.answer?.answer ?? q.answer ?? ''
   } else if (t.includes('completion') || t.includes('short_answer') || t.includes('labelling')) {
     wordLimit.value = q.data?.word_limit ?? 2
+    wordBankText.value = (q.data?.word_bank || []).join('\n')
     answerText.value = Array.isArray(q.answer?.answer) ? q.answer.answer.join('|') : (q.answer?.answer ?? q.answer ?? '')
   } else {
     answerText.value = q.answer?.answer ?? q.answer ?? ''
@@ -662,9 +677,12 @@ async function saveQuestion() {
     q.answer = { answer: answerText.value.trim() }
   } else if (t.includes('matching')) {
     q.data.options = parseOptions(optionsText.value)
+    if (dragDropInteraction.value) q.data.interaction = 'drag_drop'
+    else delete q.data.interaction
     q.answer = { answer: answerText.value.trim().toUpperCase() }
   } else if (t.includes('completion') || t.includes('short_answer') || t.includes('labelling')) {
     q.data.word_limit = wordLimit.value
+    q.data.word_bank = wordBankText.value.split('\n').map(s => s.trim()).filter(Boolean)
     const alts = answerText.value.split('|').map(s => s.trim()).filter(Boolean)
     q.answer = { answer: alts.length > 1 ? alts : alts[0] }
   } else if (t === 'reading_tfng' || t === 'reading_ynng') {
@@ -716,6 +734,17 @@ async function deleteQuestion(id: number) {
 
 <style scoped>
 .test-editor { display: block; }
+.check-row {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 12px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.check-row input {
+  width: auto;
+}
 
 /* Loading skeleton */
 .editor-skeleton { display: flex; flex-direction: column; gap: 16px; }

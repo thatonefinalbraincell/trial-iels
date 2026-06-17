@@ -10,7 +10,9 @@
     "postinstall": "nuxt prepare",
     "start": "node .output/server/index.mjs",
     "preview": "nuxt build && wrangler pages dev dist",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
     "deploy": "nuxt build && wrangler pages deploy dist --project-name=ielts-platform",
+    "audio:cambridge17": "node --experimental-strip-types scripts/extract-cambridge17-audio.ts",
     "seed:local-sqlite": "node --experimental-strip-types scripts/seed.ts",
     "reset-db": "node --experimental-strip-types scripts/reset-db.ts",
     "d1:schema": "wrangler d1 execute ielts-db --remote --file=./server/db/schema.sql",
@@ -18,6 +20,12 @@
     "d1:seed-gen": "npm run seed:local-sqlite && node --experimental-strip-types scripts/dump-d1-sql.ts",
     "d1:seed": "npm run d1:seed-gen && wrangler d1 execute ielts-db --remote --file=./data/seed.sql",
     "d1:seed:local": "npm run d1:seed-gen && wrangler d1 execute ielts-db --local --file=./data/seed.sql",
+    "d1:seed:cambridge17-gen": "node --experimental-strip-types scripts/dump-cambridge17-d1-sql.ts",
+    "d1:seed:cambridge17": "npm run d1:seed:cambridge17-gen && wrangler d1 execute ielts-db --remote --file=./data/cambridge17-seed.sql",
+    "d1:seed:cambridge17:local": "npm run d1:seed:cambridge17-gen && wrangler d1 execute ielts-db --local --file=./data/cambridge17-seed.sql",
+    "d1:seed:reading-gen": "npm run seed:local-sqlite && node --experimental-strip-types scripts/dump-reading-d1-sql.ts",
+    "d1:seed:reading": "npm run d1:seed:reading-gen && wrangler d1 execute ielts-db --remote --file=./data/reading-seed.sql",
+    "d1:seed:reading:local": "npm run d1:seed:reading-gen && wrangler d1 execute ielts-db --local --file=./data/reading-seed.sql",
     "d1:reset": "npm run d1:schema && npm run d1:seed"
   },
   "dependencies": {
@@ -30,7 +38,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/better-sqlite3": "^7.6.11",
     "@types/node": "^22.5.0",
-    "better-sqlite3": "^11.3.0",
+    "better-sqlite3": "^12.10.0",
     "typescript": "^5.5.4",
     "wrangler": "^4.83.0"
   }

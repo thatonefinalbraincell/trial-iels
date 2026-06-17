@@ -21,20 +21,26 @@
       </div>
 
       <div v-if="(byskill[skill.key] || []).length" class="test-grid">
-        <NuxtLink
+        <div
           v-for="t in byskill[skill.key]" :key="t.id"
-          :to="`/tests/${skill.key}/${t.id}`" class="test-card"
+          class="test-card"
         >
           <div>
-            <h3>{{ t.title }}</h3>
-            <p class="text-muted text-sm" style="margin:2px 0 6px;">{{ t.description || 'Cambridge-style mock test' }}</p>
+            <h3>{{ publicTitle(t) }}</h3>
+            <p class="text-muted text-sm" style="margin:2px 0 6px;">{{ publicDescription(t) }}</p>
             <div class="meta">
               <span><Icon name="clock" :size="14" /> {{ t.duration_min }} min</span>
               <span><Icon name="file-text" :size="14" /> {{ skill.questionInfo }}</span>
             </div>
           </div>
-          <span class="arrow"><Icon name="arrow-right" :size="18" /></span>
-        </NuxtLink>
+          <div v-if="skill.key === 'listening'" class="test-card-actions">
+            <NuxtLink :to="`/tests/listening/${t.id}?mode=practice`" class="btn secondary sm">Practice</NuxtLink>
+            <NuxtLink :to="`/tests/listening/${t.id}?mode=test`" class="btn sm">Test mode</NuxtLink>
+          </div>
+          <NuxtLink v-else :to="`/tests/${skill.key}/${t.id}`" class="arrow" aria-label="Start test">
+            <Icon name="arrow-right" :size="18" />
+          </NuxtLink>
+        </div>
       </div>
 
       <div v-else class="empty">
@@ -62,4 +68,17 @@ const byskill = computed(() => {
 })
 
 useHead({ title: 'Mock IELTS tests — pick a skill' })
+function publicTitle(test: any) {
+  if (test?.title === 'Cambridge IELTS 17 Academic Listening Test 1') {
+    return 'Cambridge-style IELTS Academic Listening - Mock Test 1'
+  }
+  return test?.title || 'Cambridge-style IELTS mock test'
+}
+
+function publicDescription(test: any) {
+  if (test?.title === 'Cambridge IELTS 17 Academic Listening Test 1') {
+    return 'Cambridge-style listening practice with four audio parts, practice mode and one-play test mode.'
+  }
+  return test?.description || 'Cambridge-style mock test'
+}
 </script>

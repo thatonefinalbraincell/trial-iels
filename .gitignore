@@ -3,6 +3,8 @@ node_modules
 .output
 .nitro
 .cache
+.superpowers/
+.artifacts/
 dist
 dist/
 data/*.sqlite
@@ -10,6 +12,9 @@ data/*.sqlite-journal
 data/*.sqlite-wal
 data/*.sqlite-shm
 data/seed.sql
+data/cambridge17-seed.sql
+data/reading-seed.sql
+data/engnovate-*.html
 public/uploads/audio/*
 public/uploads/images/*
 !public/uploads/audio/.gitkeep
@@ -17,4 +22,5 @@ public/uploads/images/*
 .env
 .dev.vars
 .wrangler/
+tmp-wrangler-pages*.log
 .DS_Store
