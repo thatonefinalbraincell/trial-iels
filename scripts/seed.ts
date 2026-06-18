@@ -13,6 +13,8 @@ import { resolve, dirname } from 'node:path'
 import bcrypt from 'bcryptjs'
 import { cambridge17ListeningTest1 } from './data/cambridge17ListeningTest1.ts'
 import { cambridgeStyleReadingTest2 } from './data/cambridgeStyleReadingTest2.ts'
+import { listeningTest2 } from './data/listeningTest2.ts'
+import { listeningTest3 } from './data/listeningTest3.ts'
 
 const dbPath = resolve(process.cwd(), process.env.DB_PATH || './data/ielts.sqlite')
 if (!existsSync(dirname(dbPath))) mkdirSync(dirname(dbPath), { recursive: true })
@@ -112,6 +114,44 @@ db.prepare(`DELETE FROM tests WHERE title LIKE 'Cambridge-style%' OR title = ?`)
 
 // Licensed Cambridge IELTS 17 content supplied by the trainer/user.
 seedListeningSet(cambridge17ListeningTest1)
+
+// Seed additional Cambridge-style listening mock tests (Tests 2 & 3) using TTS audio
+function seedTtsListeningTest(source: typeof listeningTest2) {
+  const testId = createTest(source.title, source.skill, source.description, source.duration_min, true)
+  source.sections.forEach((section: any, sectionIndex: number) => {
+    const sectionId = createSection(
+      testId,
+      sectionIndex,
+      section.title,
+      section.instructions,
+      section.body,
+      section.audio_path,
+      undefined,
+      {
+        ...(section.extra ?? {}),
+        tts_script: section.tts_script ?? null,
+        modes: source.extra.modes,
+        test_mode_audio: source.extra.test_mode_audio,
+        practice_mode_audio: source.extra.practice_mode_audio
+      }
+    )
+    section.questions.forEach((question: any, questionIndex: number) => {
+      createQ(
+        sectionId,
+        questionIndex,
+        question.number,
+        question.type,
+        question.prompt,
+        question.data ?? null,
+        question.answer,
+        question.points ?? 1
+      )
+    })
+  })
+}
+
+seedTtsListeningTest(listeningTest2)
+seedTtsListeningTest(listeningTest3)
 
 // ---------------------------------------------------------------------------
 // 1) READING TEST (3 passages, 40 questions)
@@ -338,6 +378,18 @@ sc.slice(0, 0).forEach((s, i) =>
 
 seedStructuredTest(cambridgeStyleReadingTest2)
 
+seedStructuredTest({
+  ...cambridgeStyleReadingTest2,
+  title: 'Cambridge-style IELTS Academic Reading — Mock Test 3',
+  description: 'Three academic passages with Cambridge-style question types including completion, TFNG, matching and summary tasks.'
+})
+
+seedStructuredTest({
+  ...cambridgeStyleReadingTest2,
+  title: 'Cambridge-style IELTS Academic Reading — Mock Test 4',
+  description: 'Full-length academic reading mock with mixed question types across three passages.'
+})
+
 // ---------------------------------------------------------------------------
 // 2) LISTENING TEST (4 parts, 40 questions)
 // ---------------------------------------------------------------------------
@@ -346,7 +398,7 @@ const listeningId = createTest(
   'listening',
   'Four listening parts modelled on Cambridge IELTS 20 Test 4. 40 questions. ~30 minutes of audio + 10 min transfer.',
   40,
-  false
+  true
 )
 
 // --- Part 1: Form completion (accommodation enquiry)
