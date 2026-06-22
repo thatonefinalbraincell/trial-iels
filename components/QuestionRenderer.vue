@@ -5,8 +5,8 @@
 -->
 <template>
   <div class="question">
-    <span class="qnum">{{ question.number ?? question.order_index + 1 }}</span>
-    <span class="q-prompt" v-html="question.prompt"></span>
+    <span class="qnum">{{ displayNumber ?? (question.number ?? question.order_index + 1) }}</span>
+    <span v-if="!question.data?.linked_to && !isInlineSentenceCompletion" class="q-prompt" v-html="question.prompt"></span>
 
     <!-- MULTIPLE CHOICE single ----------------------------------------------->
     <div v-if="type === 'mcq_single'" class="options">
@@ -24,9 +24,11 @@
 
     <div v-else-if="type === 'mcq_multi'" class="options">
       <small style="color:#555;">Choose {{ question.data?.choose ?? 2 }} answers.</small>
-      <label v-for="(opt, i) in question.data?.options || []" :key="i">
+      <label v-for="(opt, i) in question.data?.options || []" :key="i"
+             :class="{ disabled: !isMultiSelected(letter(i)) && multiAtMax }">
         <input type="checkbox" :value="letter(i)"
-               :checked="Array.isArray(modelValue) && modelValue.includes(letter(i))"
+               :checked="isMultiSelected(letter(i))"
+               :disabled="!isMultiSelected(letter(i)) && multiAtMax"
                @change="toggleMulti(letter(i), ($event.target as HTMLInputElement).checked)"/>
         <strong>{{ letter(i) }}.</strong> {{ opt }}
       </label>
@@ -100,6 +102,26 @@
       </select>
     </div>
 
+    <!-- SENTENCE COMPLETION with blank replaced inline ----------------------->
+    <template v-else-if="isInlineSentenceCompletion">
+      <span class="q-prompt q-prompt-with-blank">
+        <template v-for="(part, i) in promptParts" :key="i">
+          <span v-html="part"></span>
+          <input
+            v-if="i < promptParts.length - 1"
+            type="text"
+            class="inline-blank-input"
+            :value="modelValue || ''"
+            @input="emit('update', ($event.target as HTMLInputElement).value)"
+            :placeholder="String(displayNumber ?? question.number ?? '')"
+          />
+        </template>
+      </span>
+      <div v-if="question.data?.word_limit" class="inline-word-limit">
+        Write <strong>{{ wordLimitInstruction(question.data.word_limit) }}</strong> for each answer.
+      </div>
+    </template>
+
     <!-- FILL IN THE BLANK types (completion + short answer) ------------------>
     <div v-else-if="isCompletion" class="options">
       <small v-if="question.data?.word_limit" style="color:#555; display:block; margin-bottom:4px;">
@@ -131,7 +153,7 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ question: any; modelValue?: any }>()
+const props = defineProps<{ question: any; modelValue?: any; displayNumber?: string | number }>()
 const emit = defineEmits<{ (e: 'update', v: any): void }>()
 
 const type = computed<string>(() => {
@@ -147,6 +169,9 @@ const isCompletion = computed(() =>
    'form_completion','flowchart_completion','short_answer','diagram_labelling',
    'map_labelling'].includes(type.value)
 )
+const hasBlanks = computed(() => /_{2,}/.test(props.question.prompt || ''))
+const promptParts = computed(() => (props.question.prompt || '').split(/_{2,}/))
+const isInlineSentenceCompletion = computed(() => isCompletion.value && hasBlanks.value)
 const isMatchingSelect = computed(() =>
   ['matching_information','matching_features','matching','matching_sentence_endings'].includes(type.value)
 )
@@ -195,10 +220,18 @@ function dropChoice(e: DragEvent) {
   if (value) emit('update', value)
 }
 
+const multiMax = computed(() => props.question.data?.choose ?? 2)
+const multiSelected = computed<string[]>(() => Array.isArray(props.modelValue) ? props.modelValue : [])
+const multiAtMax = computed(() => multiSelected.value.length >= multiMax.value)
+function isMultiSelected(val: string) { return multiSelected.value.includes(val) }
+
 function toggleMulti(val: string, checked: boolean) {
-  const cur: string[] = Array.isArray(props.modelValue) ? [...props.modelValue] : []
+  const cur = [...multiSelected.value]
   const idx = cur.indexOf(val)
-  if (checked && idx < 0) cur.push(val)
+  if (checked && idx < 0) {
+    if (cur.length >= multiMax.value) return
+    cur.push(val)
+  }
   if (!checked && idx >= 0) cur.splice(idx, 1)
   emit('update', cur.sort())
 }
