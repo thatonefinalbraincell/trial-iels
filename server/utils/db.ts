@@ -1,5 +1,31 @@
 import type { H3Event } from 'h3'
 
+// Type declarations for Cloudflare D1 (to fix TypeScript errors)
+interface D1Database {
+  prepare(sql: string): D1PreparedStatement
+  batch<T = any>(statements: D1PreparedStatement[]): Promise<T[]>
+  dump(): Promise<ArrayBuffer>
+  exec(sql: string): Promise<D1Result>
+}
+
+interface D1PreparedStatement {
+  bind(...values: any[]): D1PreparedStatement
+  first<T = any>(column?: string): Promise<T | null>
+  run(): Promise<D1Result>
+  all<T = any>(): Promise<D1Result<T>>
+  raw<T = any>(): Promise<T[]>
+}
+
+interface D1Result<T = any> {
+  success: boolean
+  meta?: any
+  results?: T[]
+  lastInsertRowid?: number | null
+  changes?: number
+  duration?: number
+  served_by?: string
+}
+
 export interface AppDb {
   /** First row or null. */
   first<T = any>(sql: string, ...args: any[]): Promise<T | null>
@@ -14,7 +40,8 @@ export interface AppDb {
 }
 
 function useDb(event: H3Event): AppDb {
-  const db = event.context.cloudflare?.env?.ielts_db
+  // Cast to our D1Database type to fix TypeScript errors
+  const db = event.context.cloudflare?.env?.ielts_db as unknown as D1Database
   if (!db) {
     throw new Error('D1 database binding not found (ielts_db)')
   }
@@ -27,7 +54,7 @@ function useDb(event: H3Event): AppDb {
 
     async all<T = any>(sql: string, ...args: any[]): Promise<T[]> {
       const { results } = await db.prepare(sql).bind(...args).all<T>()
-      return results
+      return results || []
     },
 
     async run(sql: string, ...args: any[]): Promise<{ lastInsertRowid: number; changes: number }> {
@@ -50,7 +77,7 @@ function useDb(event: H3Event): AppDb {
         },
         async all() {
           const { results } = await stmt.all()
-          return results
+          return results || []
         },
         async get() {
           return await stmt.first()
@@ -62,7 +89,7 @@ function useDb(event: H3Event): AppDb {
       const d1Stmts = stmts.map((s) => {
         // If it's already a prepared statement (has _statement), use it
         if (s._statement) {
-          return s
+          return s as unknown as D1PreparedStatement
         }
         // Otherwise, assume it's { sql, args } or similar and create statement
         return s
