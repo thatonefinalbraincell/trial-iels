@@ -33,9 +33,6 @@ export default defineNuxtConfig({
     preset: 'cloudflare',
     experimental: {
       asyncContext: true
-    },
-    cloudflare: {
-      assets: true
     }
   }
 })

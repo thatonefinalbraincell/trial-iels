@@ -4,6 +4,9 @@ compatibility_flags = ["nodejs_compat"]
 main = ".output/server/index.mjs"
 assets = { directory = ".output/public" }
 
+# Enable Node.js polyfills and make node: imports work properly
+node_compat = true
+
 # ---------------------------------------------------------------------------
 # D1 binding — SQL database
 # ---------------------------------------------------------------------------
