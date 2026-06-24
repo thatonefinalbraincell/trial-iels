@@ -13,8 +13,11 @@ import { resolve, dirname } from 'node:path'
 import bcrypt from 'bcryptjs'
 import { cambridge17ListeningTest1 } from './data/cambridge17ListeningTest1.ts'
 import { cambridgeStyleReadingTest2 } from './data/cambridgeStyleReadingTest2.ts'
+import { readingTest3 } from './data/readingTest3.ts'
+import { readingTest4 } from './data/readingTest4.ts'
 import { listeningTest2 } from './data/listeningTest2.ts'
 import { listeningTest3 } from './data/listeningTest3.ts'
+import { listeningTest4 } from './data/listeningTest4.ts'
 
 const dbPath = resolve(process.cwd(), process.env.DB_PATH || './data/ielts.sqlite')
 if (!existsSync(dirname(dbPath))) mkdirSync(dirname(dbPath), { recursive: true })
@@ -152,6 +155,7 @@ function seedTtsListeningTest(source: typeof listeningTest2) {
 
 seedTtsListeningTest(listeningTest2)
 seedTtsListeningTest(listeningTest3)
+seedTtsListeningTest(listeningTest4)
 
 // ---------------------------------------------------------------------------
 // 1) READING TEST (3 passages, 40 questions)
@@ -377,18 +381,8 @@ sc.slice(0, 0).forEach((s, i) =>
     { answer: s.ans }))
 
 seedStructuredTest(cambridgeStyleReadingTest2)
-
-seedStructuredTest({
-  ...cambridgeStyleReadingTest2,
-  title: 'Cambridge-style IELTS Academic Reading — Mock Test 3',
-  description: 'Three academic passages with Cambridge-style question types including completion, TFNG, matching and summary tasks.'
-})
-
-seedStructuredTest({
-  ...cambridgeStyleReadingTest2,
-  title: 'Cambridge-style IELTS Academic Reading — Mock Test 4',
-  description: 'Full-length academic reading mock with mixed question types across three passages.'
-})
+seedStructuredTest(readingTest3)
+seedStructuredTest(readingTest4)
 
 // ---------------------------------------------------------------------------
 // 2) LISTENING TEST (4 parts, 40 questions)

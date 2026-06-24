@@ -19,6 +19,10 @@ export interface AppDb {
   all<T = any>(sql: string, ...args: any[]): T[]
   /** INSERT/UPDATE/DELETE with metadata. */
   run(sql: string, ...args: any[]): { lastInsertRowid: number; changes: number }
+  /** Prepare a statement for batch execution. */
+  prepare(sql: string, ...args: any[]): any
+  /** Execute statements in a batch transaction. */
+  batch(stmts: any[]): Promise<any[]>
 }
 
 function useDb(): AppDb {
@@ -39,6 +43,34 @@ function useDb(): AppDb {
         lastInsertRowid: Number(result.lastInsertRowid),
         changes: Number(result.changes)
       }
+    },
+    prepare(sql: string, ...args: any[]) {
+      const stmt = db.prepare(sql)
+      return {
+        run() {
+          const result = stmt.run(...args)
+          return {
+            lastInsertRowid: Number(result.lastInsertRowid),
+            changes: Number(result.changes)
+          }
+        },
+        all() {
+          return stmt.all(...args)
+        },
+        get() {
+          return stmt.get(...args)
+        }
+      }
+    },
+    async batch(stmts: any[]): Promise<any[]> {
+      const runBatch = db.transaction((statements: any[]) => {
+        const results: any[] = []
+        for (const s of statements) {
+          results.push(s.run())
+        }
+        return results
+      })
+      return runBatch(stmts)
     }
   }
 }
