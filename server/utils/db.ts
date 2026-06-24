@@ -8,8 +8,8 @@ let localDb: any = null
 async function getLocalDb() {
   if (localDb) return localDb
   const Database = (await import('better-sqlite3')).default
-  const { resolve, existsSync, mkdirSync } = await import('node:path')
-  const { readFileSync } = await import('node:fs')
+  const { resolve } = await import('node:path')
+  const { readFileSync, existsSync, mkdirSync } = await import('node:fs')
 
   const dbPath = resolve(process.cwd(), './data/ielts.sqlite')
   const dataDir = resolve(process.cwd(), './data')
